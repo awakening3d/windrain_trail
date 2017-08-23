@@ -1,0 +1,115 @@
+package.path = package.path .. ";.\\lua_game\\?.lua;.\\lua_ui\\?.lua;.\\lua_ani\\?.lua"
+require 'winstyle'
+require 'game'
+
+
+wnd.SetWindowText( GetMainWnd(), g_wincfg.winTitle )
+local scrw, scrh = GetFullScreenMode(-1) -- get current display mode's width & height;
+local left, top, right, bottom = wnd.GetWindowRect( GetMainWnd() ) 
+local winw = right - left
+local winh = bottom - top
+wnd.MoveWindow( GetMainWnd(), (scrw-winw)/2, (scrh-winh)/2, winw, winh ) -- center window
+
+-- disable accelerator keys
+EnableAccel(false)
+
+--- button sound ---
+function mouse_rollover_button()
+	local snds = {'\\throw4.wav', '\\throw1.wav', '\\throw.wav', '\\sword.wav' }
+	PlaySound( snds[  math.random(1,4) ] )
+end
+
+-- ¿ªÊ¼ start shot_end
+local fadeouttime = 9999999
+function cb_start()
+	if fadeouttime<=GetAppTime() then return end
+	PlayAnimate('fadeout')
+	fadeouttime = GetAppTime()
+end
+
+
+--- Keyboard Input Messages ---
+
+function OnKeyDown(nChar)
+ end
+
+function OnKeyUp(nChar)
+end
+
+function OnChar(nChar)
+end
+
+function OnKillFocus()
+end
+
+function OnSetFocus()
+end
+
+--- Mouse Input Messages ---
+function OnMouseMove(x,y)
+end
+
+function OnMouseWheel(delta)
+end
+
+function OnLButtonDown(x,y)
+end
+
+function OnLButtonUp(x,y)
+end
+
+function OnLButtonDblClk(x,y)
+	FullScreen( not IsFullScreen() )
+end
+
+
+function OnRButtonDown(x,y)
+end
+
+function OnRButtonUp(x,y)
+end
+
+function OnRButtonDblClk(x,y)
+end
+
+
+function OnMButtonDown(x,y)
+end
+
+function OnMButtonUp(x,y)
+end
+
+function OnMButtonDblClk(x,y)
+end
+
+
+
+--- Window Messages --
+
+function OnActivate(nActive,nMinimized)
+end
+
+function OnSize( type, cx, cy )
+	winstyle_OnSize( type, cx, cy )
+end
+
+
+--- app flow --
+function FrameMove()
+	if GetAppTime() - fadeouttime > 3 then
+		game_LoadScene('zhufangzi.sce','start')
+		g_wincfg.is_full_drag=false
+		return
+	end
+end -- of FrameMove
+
+
+function Render2D(draw)
+	winstyle_Render2D(draw)
+end
+
+function Render3D(draw)
+end
+
+function OnRestoreDevice()
+end

@@ -1,0 +1,158 @@
+require 'winstyle'
+require 'game'
+require 'procani'
+require 'pplayer'
+require 'hud'
+require 'bksound'
+
+
+game_OnSceneLoaded()
+
+
+
+g_hotspot_function[ 'hotspot_out'] = function()
+	msgBox("出去吗？", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_exit_dungeon, ID_NO )
+end
+
+g_hotspot_function[ 'hotspot_door'] = function()
+	msgBox("门似乎被封住了。", "风雨江湖")
+end
+
+local fadeouttime = 9999999
+function exit_dungeon_scene()
+	PlayAnimate('fadeout')
+	fadeouttime = GetAppTime()
+end
+
+
+--- Keyboard Input Messages ---
+
+
+function OnKeyDown(nChar)
+	 HUD_OnKeyDown( nChar )
+ end
+
+function OnKeyUp(nChar)
+end
+
+function OnChar(nChar)
+end
+
+function OnKillFocus()
+end
+
+function OnSetFocus()
+end
+
+--- Mouse Input Messages ---
+function OnMouseMove(x,y)
+	game_OnMouseMove(x,y)
+end
+
+function OnMouseWheel(delta)
+end
+
+function OnLButtonDown(x,y)
+	game_OnLButtonDown(x,y)
+end
+
+function OnLButtonUp(x,y)
+
+	if  game_OnLButtonUp(x,y) then return end
+
+	pplayer.OnLButtonUp(x,y)
+
+end
+
+function OnLButtonDblClk(x,y)
+end
+
+
+function OnRButtonDown(x,y)
+end
+
+function OnRButtonUp(x,y)
+	HUD_OnRButtonUp(x,y)
+end
+
+function OnRButtonDblClk(x,y)
+end
+
+
+function OnMButtonDown(x,y)
+end
+
+function OnMButtonUp(x,y)
+end
+
+function OnMButtonDblClk(x,y)
+end
+
+
+
+--- Window Messages --
+
+function OnActivate(nActive,nMinimized)
+end
+
+function OnSize( type, cx, cy )
+	winstyle_OnSize( type, cx, cy )
+	game_OnSize(type,cx,cy)
+	HUD_OnSize( type, cx, cy )
+end
+
+
+--- app flow --
+
+local lastAppTime=GetAppTime()
+
+function FrameMove()
+
+	local nowAppTime=GetAppTime()
+	local AppTimeD=nowAppTime-lastAppTime;
+	lastAppTime=nowAppTime;
+
+	-- game
+	game_FrameMove()
+
+	-- player
+	pplayer.frameMove( AppTimeD )
+
+	
+	-- obj ani
+	ani_framemove(AppTimeD)
+
+	-- hud
+	HUD_FrameMove( AppTimeD )
+
+	--bksound
+	bksound_FrameMove( AppTimeD )
+
+
+	if nowAppTime - fadeouttime > 10 then
+		game_LoadScene('stream.sce','out_dungeon' )
+		return
+	end
+
+
+end -- of FrameMove
+
+
+function Render2D(draw)
+	HUD_Render2D(draw)
+	winstyle_Render2D(draw)
+	game_Render2D(draw)
+end
+
+function Render3D(draw)
+end
+
+function OnRestoreDevice()
+	HUD_OnRestoreDevice()
+end
+
+
+--- add your own input
+function UpdateUserInput( userinput )
+	pplayer.UpdateUserInput( userinput)
+end

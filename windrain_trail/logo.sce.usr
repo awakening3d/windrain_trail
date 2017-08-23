@@ -1,0 +1,32 @@
+package.path = package.path .. ";.\\lua_game\\?.lua;.\\lua_ui\\?.lua;.\\lua_ani\\?.lua"
+require 'winstyle'
+
+wnd.SetWindowText( GetMainWnd(), g_wincfg.winTitle )
+local scrw, scrh = GetFullScreenMode(-1) -- get current display mode's width & height;
+local left, top, right, bottom = wnd.GetWindowRect( GetMainWnd() ) 
+local winw = right - left
+local winh = bottom - top
+wnd.MoveWindow( GetMainWnd(), (scrw-winw)/2, (scrh-winh)/2, winw, winh ) -- center window
+
+-- disable accelerator keys
+EnableAccel(false)
+
+function cb_logoend()
+	g_wincfg.is_full_drag=false
+	LoadScene( 'opening.sce' )
+end
+
+function OnLButtonDblClk(x,y)
+	FullScreen( not IsFullScreen() )
+end
+
+function OnSize( type, cx, cy )
+	winstyle_OnSize( type, cx, cy )
+end
+
+function FrameMove()
+end 
+
+function Render2D(draw)
+	winstyle_Render2D(draw)
+end

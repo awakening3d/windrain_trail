@@ -1,0 +1,410 @@
+require 'winstyle'
+require 'game'
+require 'procani'
+require 'pplayer'
+require 'hud'
+require 'bksound'
+
+require 'fishing'
+
+local noinput_time =	180 -- after this time of no input, show landscape
+
+
+game_OnSceneLoaded()
+
+
+g_soundconfig.music_list =  {'\\rivertour.wma', '\\liushuixingyun.wma',  '\\legend1.mid',  '\\legend2.mid',  '\\legend3.mid',  '\\legend4.mid'}
+
+local snd = soundsource.new( {'\\bird0.wav','\\bird1.wav'} )
+snd.setTimeInterval( 6, 36 )
+snd.setVolumeScale(0.2,0.7)
+bksound_Add( snd )
+
+
+----- atmosphere -----
+require 'scripts\\Scattering\\Sun'
+require 'scripts\\Scattering\\Atmosphere'
+
+--g_world.atmomaterlist = {sky,terrain,lake,grass,decal,decalstone,decalsand,decalmud,leaves,bushinstance,housewall,bambooraft,fish,bird_bailu,riverrock,mater_lipper}
+g_world.atmomaterlist ={}
+local pos=scene.getMaterialsHead()
+while (pos) do
+	local mater
+	mater,pos=scene.getMaterialsNext(pos)
+	if mater then add_to_list(g_world.atmomaterlist, mater) end
+end
+
+
+sun=Sun.new( g_world.atmomaterlist )
+atmo=Atmosphere.new( g_world.atmomaterlist )
+
+---- ripple -----
+--lake.setD3DEffect('\\water\\lakeRipple.fx')
+--lake.setTexture( 4, texturelist.addTexture('\\ripple.dds') )
+
+----- blockers ----
+g_world.water_level = riverwater.getPosition().y
+riverwater.setNoClipMask( orDWORD( riverwater.getNoClipMask(), NOCLIPMASK_water ) )
+
+local function set_noclipmask( sectionname, mask) 
+	local pos = GetSelectionHead( sectionname )
+	while (pos) do
+	    local root
+	    root,pos = _GetSelectionNext(pos)
+	    if (root) then
+		local surf = SurfaceFromHandle(root) -- 暂时这样用，假设返回对象是surface，需要完善
+		surf.setNoClipMask( orDWORD( surf.getNoClipMask(), mask ) )
+	    end
+	end
+end
+
+set_noclipmask( 'blockers', NOCLIPMASK_blockers )
+set_noclipmask( 'waterblockers', NOCLIPMASK_blockers )
+
+---- bamboo raft -----
+local function GetPlayingShotName()
+	local sh = GetPlayingShot()
+	if not sh then return end
+	return sh.getName()
+end
+
+
+local bbraftStartPosition = bbraft.getPosition()
+local bbraftStartRotation = bbraft.getRotation()
+bbraft.setStyle( orDWORD( bbraft.getStyle(), MOVS_NOCLIP ) )  -- 不然结束游览时可能把人挤入水中
+
+local tryexitscene = false
+function BambooraftOnOff()
+	if 'bambooraft' == GetPlayingShotName() then
+		StopShot()
+	else
+		PlayShot('bambooraft')
+		bksound_PlayMusic()
+		pplayer.freezing(true)
+		tryexitscene = true
+	end
+end
+
+local fadeouttime = 9999999
+function exit_stream_scene()
+	PlayAnimate('fadeout')
+	fadeouttime = GetAppTime()
+end
+
+
+g_hotspot_function[ 'hotspot_bambooraft'] = function()
+	if 'bambooraft' == GetPlayingShotName() then
+		msgBox("结束游览吗?", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_bambooraft, ID_NO )
+	else
+		msgBox("竹筏游览吗?", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_bambooraft, ID_NO )
+	end
+end
+
+--- 蚯蚓 ---
+local g_qiuyin_count = 3
+g_hotspot_function[ 'hotspot_qiuyin'] = function()
+	if g_qiuyin_count<=0 or math.random()>0.3 then
+		local msg = { '蚯蚓都钻哪里去了呢？', '要挖条蚯蚓还真不容易，都去哪了？', '蚯蚓，蚯蚓快出来，我着急钓鱼呢。' }
+		message_Push( msg[ math.random(1,3) ] , g_config.sysmsgcolor )
+		return
+	end
+
+	goodsPick( goodsID.qiuyin )
+	message_Push( '挖到一条蚯蚓!' , g_config.sysmsgcolor )
+	g_qiuyin_count = g_qiuyin_count -1
+end
+
+--- 地牢 ---
+g_hotspot_function[ 'hotspot_dungeon'] = function()
+	msgBox("进去吗？", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_enter_dungeon, ID_NO )
+end
+
+local enter_dungeon = false
+function enter_dungeon_scene()
+	enter_dungeon	 = true
+end
+
+
+local playlandscape_time = 99999999
+local landscapeplaying = false
+local uistate_save = nil
+local function hasinput() -- if player do input
+	playlandscape_time = GetAppTime() + noinput_time
+	if landscapeplaying then
+		StopShot()
+		blind.setColor( ColortoDWORD( color.new(0,0,0,0) ) )
+		landscapeplaying = false
+		ui_Hide(uistate_save)
+	end
+end
+
+
+--- Keyboard Input Messages ---
+
+
+function OnKeyDown(nChar)
+	 hasinput()
+	 HUD_OnKeyDown( nChar )
+end
+
+function OnKeyUp(nChar)
+end
+
+function OnChar(nChar)
+end
+
+function OnKillFocus()
+end
+
+function OnSetFocus()
+end
+
+
+
+--- Mouse Input Messages ---
+function OnMouseMove(x,y)
+	hasinput()
+	game_OnMouseMove(x,y)
+end
+
+function OnMouseWheel(delta)
+end
+
+function OnLButtonDown(x,y)
+	hasinput()
+	game_OnLButtonDown(x,y)
+end
+
+function OnLButtonUp(x,y)
+	if  game_OnLButtonUp(x,y) then return end
+
+	pplayer.OnLButtonUp(x,y)
+
+end
+
+function OnLButtonDblClk(x,y)
+end
+
+
+function OnRButtonDown(x,y)
+end
+
+function OnRButtonUp(x,y)
+	HUD_OnRButtonUp(x,y)
+end
+
+function OnRButtonDblClk(x,y)
+end
+
+
+function OnMButtonDown(x,y)
+end
+
+function OnMButtonUp(x,y)
+end
+
+function OnMButtonDblClk(x,y)
+end
+
+
+
+--- Window Messages --
+
+function OnActivate(nActive,nMinimized)
+end
+
+function OnSize( type, cx, cy )
+	winstyle_OnSize( type, cx, cy )
+	game_OnSize(type,cx,cy)
+	HUD_OnSize( type, cx, cy )
+end
+
+
+--- app flow --
+
+local lippertime = 0
+local raftlippertime = 0
+
+local lastraftrot = nil
+local lastrafsound = 0
+
+local fishanitime ={ math.random(10,200), math.random(10,200), math.random(10,200) }
+local fishani = { 'fishani1', 'fishani2', 'fishani3' }
+local birdani = { 'birdani1', 'birdani2', 'birdani3' }
+
+local lastAppTime=GetAppTime()
+function FrameMove()
+
+	local nowAppTime=GetAppTime()
+	local AppTimeD=nowAppTime-lastAppTime;
+	lastAppTime=nowAppTime;
+
+	-- show landscape
+	if nowAppTime > playlandscape_time then
+		playlandscape_time = 99999999
+		if (not IsPlayingShot() ) then
+			PlayShot('mountain0')
+			landscapeplaying = true
+			uistate_save = ui_IsHidden()
+			ui_Hide(true)
+		end
+	end
+
+
+	-- game
+	game_FrameMove()
+
+
+	-- player
+	pplayer.frameMove( AppTimeD )
+
+
+	-- obj ani
+	ani_framemove(AppTimeD)
+
+	-- hud
+	HUD_FrameMove( AppTimeD )
+
+	--bksound
+	bksound_FrameMove( AppTimeD )
+
+	-- bambooraft
+	if 'bambooraft' == GetPlayingShotName() then 
+		camera.setPosition( bbraft.getMatrix() * vec.new( 0,150,-350 ) )
+		local rot = bbraft.getRotation()
+		if not lastraftrot then lastraftrot = rot end
+		
+		--- camera flow
+		local r=camera.getRotation()
+		r.y=r.y + rot.y - lastraftrot.y
+		camera.setRotation(r)
+
+		--- ripple
+		raftlippertime = raftlippertime + AppTimeD
+		if raftlippertime > 0.3 then
+			raftlippertime = 0
+			local p = bbraft.getMatrix() * vec.new( 0, 0, -50 )
+			p.y = g_world.water_level
+			lipper.new( p + vec.new(0,0.1,0), 5, math.random()*0.5 + 0.5, 3 )
+		end
+
+		--- sound
+		if (nowAppTime - lastrafsound>8) then
+			if (math.random()<0.5) then
+				PlaySound('\\water0.wav',-1000)
+			else
+				PlaySound('\\water1.wav',-1000)
+			end
+			lastrafsound=nowAppTime
+		end
+
+		lastraftrot = rot
+
+		--- back to the house scene ---
+		if GetFrameTime()>40 and tryexitscene then
+			tryexitscene = false
+			HUD_MsgBox( 6, "要出去吗？", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_exit_stream, ID_NO )
+		end
+	else
+		if lastraftrot then
+			-- "bambooraft" shot end
+			bbraft.setPosition(bbraftStartPosition)
+			bbraft.setRotation(bbraftStartRotation)
+			pplayer.freezing(false)
+			lastraftrot = nil
+		end
+	end
+	
+	---- 蚯蚓 ----
+	if g_qiuyin_count<3 then
+		g_qiuyin_count = g_qiuyin_count + AppTimeD*0.05
+	end
+
+	---- fish and bird ----
+	for i=1,3 do
+		fishanitime[i] = fishanitime[i]  - AppTimeD
+		if fishanitime[i]<0 then
+			fishanitime[i] = math.random(10,200)
+			if not IsAnimatePlaying( fishani[i] ) then
+				PlayAnimate( fishani[i] )
+				fishanitime[i] = fishanitime[i] +100
+			end
+			if not IsAnimatePlaying( birdani[i] ) then
+				PlayAnimate( birdani[i] )
+			end
+		end
+	end
+	
+
+	---ripple-----
+	if character_run and g_world.water_level then -- for demo character water walk
+		lippertime = lippertime + AppTimeD
+		if lippertime > 0.2 then
+			lippertime = 0
+			local p = character_run.getPosition()
+			if p.y - g_world.water_level < 150 then -- character on water
+				local deep = g_world.water_level - g_world.terrain.getAlt( p.x, p.z )
+				if deep > 80 then -- 水够深
+					p.y = g_world.water_level
+					lipper.new( p + vec.new(0,0.1,0), 3, math.random()*0.5 + 0.8, 3 )
+				end
+			end
+		end
+	end
+
+	--[[
+	if (g_ripple_position and g_ripple_uvscale>0.5) then
+		local uvposition=g_ripple_position;
+	
+		local fuvscale=g_ripple_uvscale
+		local uvofs=-uvposition* riverwater.getUVScale()/10000;
+		uvofs=uvofs*fuvscale
+		local vUV=vec4.new(fuvscale,fuvscale,uvofs.x+0.5,-uvofs.z+0.5)
+		lake.setEffectVector('vecUVRipple',vUV)
+		lake.setEffectFloat('fRippleStrength', (g_ripple_uvscale-0.5)*0.8)
+		--- grow ripple ---
+		g_ripple_uvscale=g_ripple_uvscale*( 1 - AppTimeD )
+
+	end
+	--]]
+
+	-- enter dungeon
+	if enter_dungeon then
+		game_LoadScene('dungeon.sce')
+		return
+	end
+
+	-- back to the house scene ---
+	if nowAppTime - fadeouttime > 15 then
+		game_LoadScene('zhufangzi.sce', 'wakeup')
+		return
+	end
+end -- of FrameMove
+
+
+function Render2D(draw)
+	HUD_Render2D(draw)
+	winstyle_Render2D(draw)
+	game_Render2D(draw)
+end
+
+function Render3D(draw)
+end
+
+function OnRestoreDevice()
+	HUD_OnRestoreDevice()
+
+	--atmosphere
+	atmo.setDistanceScale( 0.15 )
+	atmo.setSkyDistanceAdjust( 0.7 )
+
+	sun.setIntensity( 75 )
+	sun.setDirection( vec.new(0,1,0) )
+
+end
+
+
+--- add your own input
+function UpdateUserInput( userinput )
+	pplayer.UpdateUserInput( userinput)
+end

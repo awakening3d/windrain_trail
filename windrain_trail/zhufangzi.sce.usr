@@ -1,0 +1,306 @@
+require 'winstyle'
+require 'game'
+require 'procani'
+require 'pplayer'
+require 'hud'
+require 'bksound'
+
+require 'igo'
+
+--goodsPick(goodsID.sword, true, true)
+
+game_OnSceneLoaded()
+
+g_config.brightness_rectification=0.1	-- 加亮场景
+
+-- 缺省禁止密室开关
+g_world.disabled_hotspots[ 'hotspot_secretroom' ] = true
+g_hotspot_function['hotspot_secretroom'] = function()
+	msgBox("进入密室吗?", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_enter_secretroom, ID_NO )
+end
+
+local enter_secretroom = false
+function enter_secretroom_scene()
+	enter_secretroom = true
+end
+
+
+-- 醒来 wakeup shot_end
+function cb_wakeup()
+	local ofs = pplayer.getPosition() - pplayer.getEyePos()
+	pplayer.setPosition( camera.getPosition() + ofs )
+end
+
+-- 开始游戏 start shot_end
+local wx,wy
+function cb_start()
+	if wx then wnd.SetCursorPos( wnd.ClientToScreen(GetMainWnd(), wx/2,wy/2) ) end
+	cb_wakeup()
+end
+
+
+--- callback for igo
+function igo_on_deactive()
+	g_world.disabled_hotspots[ igo_hotspot_name ] = false
+end
+
+
+local igo_ho;
+
+g_hotspot_function['hotspot_weiqipan'] = function()
+	msgBox("下盘棋吗?", "igo", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_igo, ID_NO )
+	igo_ho = game_GetHotspotObj()
+end
+
+function turnon_gogame()
+	igo_turnonGoGame(true,bcontinue)
+	igo_hotspot_name = igo_ho.getName()
+	g_world.disabled_hotspots[ igo_hotspot_name ] = true
+end
+
+
+--- hotspot bed ---
+-- 睡觉做梦 sleep shot_end
+local goto_dream = false
+function cb_goto_dream()
+	goto_dream = true
+end
+
+-- 睡觉
+function house_sleep()
+	PlayShot('sleep')
+end
+
+
+g_hotspot_function[ 'hotspot_bed'] = function()
+	if IsPlayingShot() then return end
+	msgBox("睡一觉吗？", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_sleep, ID_NO )
+end
+
+-------- 书信 ---------
+g_hotspot_function[ 'hotspot_xinfeng' ] = function()
+	goodsPick(goodsID.xinfeng)
+	game_GetHotspotObj().hide(true)
+	g_world.xinfeng_picked = true
+end
+
+if g_world.xinfeng_picked then
+	hotspot_xinfeng.hide(true)
+end
+
+
+-------- 剑 ---------
+g_hotspot_function[ 'hotspot_sword' ] = function()
+	goodsPick(goodsID.sword)
+	game_GetHotspotObj().hide(true)
+	g_world.sword_picked = true
+end
+
+if g_world.sword_picked then
+	hotspot_sword.hide(true)
+end
+
+
+
+
+------ 缺省提供一件衣服 -------
+local desc, amount, img = goodsGetItem( goodsID.yifu )
+if not amount then
+	goodsPick(goodsID.yifu, true, true)
+end
+
+
+
+--- water wave ---
+local water_waveflat=99
+local water_waveflat2=99
+
+local water_count = 0
+
+function start_water_shuigang_wave()
+
+	local mov = game_GetHotspotObj()
+	local ray=GetRayFromPoint( game_GetMouseXY() )
+	local bInter, fDis = mov.intersectRay(ray,true)
+	local vInterPos = ray.getOrg() + ray.getDir()*fDis;
+	local vOffset = mov.getPosition() - vInterPos;
+
+	--vOffset.x, vOffset.z  = math.random(-50,50), math.random(-50,50)
+
+	if (0==water_count) then
+		mat_water.setEffectVector('vOffset', vec4.new( vOffset.x, 0, vOffset.z, 1 ));
+		water_waveflat=4
+		water_count = 1
+	else
+		mat_water.setEffectVector('vOffset2',vec4.new( vOffset.x, 0, vOffset.z, 1 ));
+		water_waveflat2=4
+		water_count = 0
+	end
+
+
+	PlaySound('\\waterwave.wav')
+end
+
+
+
+--- Keyboard Input Messages ---
+
+
+function OnKeyDown(nChar)
+	 HUD_OnKeyDown( nChar )
+ end
+
+function OnKeyUp(nChar)
+end
+
+function OnChar(nChar)
+end
+
+function OnKillFocus()
+end
+
+function OnSetFocus()
+end
+
+--- Mouse Input Messages ---
+function OnMouseMove(x,y)
+	
+	game_OnMouseMove(x,y)
+
+	igo_OnMouseMove(x,y)
+end
+
+function OnMouseWheel(delta)
+end
+
+function OnLButtonDown(x,y)
+	game_OnLButtonDown(x,y)
+end
+
+function OnLButtonUp(x,y)
+
+	if igo_OnLButtonUp(x,y) then return end
+
+	if  game_OnLButtonUp(x,y) then return end
+
+	pplayer.OnLButtonUp(x,y)
+
+end
+
+function OnLButtonDblClk(x,y)
+end
+
+
+function OnRButtonDown(x,y)
+end
+
+function OnRButtonUp(x,y)
+	HUD_OnRButtonUp(x,y)
+end
+
+function OnRButtonDblClk(x,y)
+end
+
+
+function OnMButtonDown(x,y)
+end
+
+function OnMButtonUp(x,y)
+end
+
+function OnMButtonDblClk(x,y)
+end
+
+
+
+--- Window Messages --
+
+function OnActivate(nActive,nMinimized)
+end
+
+function OnSize( type, cx, cy )
+	winstyle_OnSize( type, cx, cy )
+	game_OnSize(type,cx,cy)
+	HUD_OnSize( type, cx, cy )
+
+	wx,wy = cx, cy
+end
+
+
+--- app flow --
+
+local lastAppTime=GetAppTime()
+
+function FrameMove()
+
+	local nowAppTime=GetAppTime()
+	local AppTimeD=nowAppTime-lastAppTime;
+	lastAppTime=nowAppTime;
+
+	-- game
+	game_FrameMove()
+
+	-- player
+	pplayer.frameMove( AppTimeD )
+
+	-- obj ani
+	ani_framemove(AppTimeD)
+
+	-- hud
+	HUD_FrameMove( AppTimeD )
+
+	--bksound
+	bksound_FrameMove( AppTimeD )
+
+
+	-- igo
+	igo_FrameMove()
+	
+	-- water wave
+	water_waveflat = water_waveflat + AppTimeD*16;
+	if (water_waveflat>99) then water_waveflat=99; end
+	mat_water.setEffectFloat('waveflat',water_waveflat);
+
+	water_waveflat2 = water_waveflat2 + AppTimeD*16;
+	if (water_waveflat2>99) then water_waveflat2=99; end
+	mat_water.setEffectFloat('waveflat2',water_waveflat2);
+
+	if goto_dream then
+		game_LoadScene('stream.sce','bambooraft' )
+		SetFrameTime(65)
+		PlayAnimate('fadein')
+		bksound_PlayMusic()
+		pplayer.freezing(true)
+		if math.random()<0.3 then PlayAnimate('character0') end
+		return
+	end
+
+	-- enter secretroom
+	if enter_secretroom then
+		game_LoadScene('secretroom.sce')
+		return
+	end
+
+end -- of FrameMove
+
+
+function Render2D(draw)
+	igo_Render2D(draw)
+
+	HUD_Render2D(draw)
+	winstyle_Render2D(draw)
+	game_Render2D(draw)
+end
+
+function Render3D(draw)
+end
+
+function OnRestoreDevice()
+	HUD_OnRestoreDevice()
+end
+
+
+--- add your own input
+function UpdateUserInput( userinput )
+	pplayer.UpdateUserInput( userinput)
+end
