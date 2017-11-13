@@ -14,8 +14,8 @@ local function new( webfile )
 							return webfile:set_dest_file(szdestfile)
 						end
 
-	local read		=	function()
-							return webfile:read()
+	local read		=	function( cachesize )
+							return webfile:read( cachesize )
 						end
 
 

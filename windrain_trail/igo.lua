@@ -23,10 +23,17 @@ local bkbunchs2={}
 
 
 local function getInterPoint(x,y)
-	local ray=GetRayFromPoint(x,y)
-	local binter, fdist=stonedesk.intersectRay(ray,true,true)
+
+	local ry
+	if g_config.vr then
+		ry = ray.new( ControllerA.getPosition(), ControllerA.getFront() )
+	else
+		ry = GetRayFromPoint(x,y)
+	end
+
+	local binter, fdist=stonedesk.intersectRay(ry,true,true)
 	if (binter) then
-		return true, ray.getOrg()+ray.getDir()*fdist
+		return true, ry.getOrg()+ry.getDir()*fdist
 	else
 		return false
 	end

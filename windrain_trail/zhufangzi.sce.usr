@@ -36,6 +36,11 @@ local wx,wy
 function cb_start()
 	if wx then wnd.SetCursorPos( wnd.ClientToScreen(GetMainWnd(), wx/2,wy/2) ) end
 	cb_wakeup()
+
+	if not g_config.vr then return end
+	local rot = camera.getRotation()
+	rot.x = 0
+	camera.setRotation( rot )
 end
 
 
@@ -120,9 +125,15 @@ local water_count = 0
 function start_water_shuigang_wave()
 
 	local mov = game_GetHotspotObj()
-	local ray=GetRayFromPoint( game_GetMouseXY() )
-	local bInter, fDis = mov.intersectRay(ray,true)
-	local vInterPos = ray.getOrg() + ray.getDir()*fDis;
+	local ry
+	if g_config.vr then
+		ry = ray.new( ControllerA.getPosition(), ControllerA.getFront() )
+	else
+		ry = GetRayFromPoint( game_GetMouseXY() )
+	end
+
+	local bInter, fDis = mov.intersectRay(ry,true)
+	local vInterPos = ry.getOrg() + ry.getDir()*fDis;
 	local vOffset = mov.getPosition() - vInterPos;
 
 	--vOffset.x, vOffset.z  = math.random(-50,50), math.random(-50,50)
@@ -164,9 +175,7 @@ end
 
 --- Mouse Input Messages ---
 function OnMouseMove(x,y)
-	
 	game_OnMouseMove(x,y)
-
 	igo_OnMouseMove(x,y)
 end
 
@@ -278,6 +287,8 @@ function FrameMove()
 	-- enter secretroom
 	if enter_secretroom then
 		game_LoadScene('secretroom.sce')
+		-- enable the out hotspot:
+		g_world.disabled_hotspots['hotspot_out']=false
 		return
 	end
 
@@ -292,7 +303,9 @@ function Render2D(draw)
 	game_Render2D(draw)
 end
 
-function Render3D(draw)
+
+function Render3D(draw, mode)
+	game_Render3D(draw, mode)
 end
 
 function OnRestoreDevice()
@@ -304,3 +317,5 @@ end
 function UpdateUserInput( userinput )
 	pplayer.UpdateUserInput( userinput)
 end
+
+

@@ -33,7 +33,22 @@ _new_ray_tb=new
 
 
 ray	=	{
-	new	=	function(handle) --handle里的内容是拷贝到ray table中，并且handle可以为空。 
-				return _new_ray_tb( _new_ray_ud(handle) )
+	new	=	function( org, dir ) --handle里的内容是拷贝到ray table中，并且handle可以为空。 
+				local handle
+				
+				if type(org) == 'userdata' then -- the parameter is handle
+					handle = org
+				end
+				
+				local r = _new_ray_tb( _new_ray_ud(handle) )	-- new ray table
+				
+				if type(org) == 'table' then -- ther parameter is vector
+					r.setOrg( org )
+				end
+				if type(dir) == 'table' then -- ther parameter is vector
+					r.setDir( dir )
+				end
+
+				return r
 			end,
 }

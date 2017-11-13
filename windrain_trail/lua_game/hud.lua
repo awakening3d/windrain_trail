@@ -22,6 +22,7 @@ end
 
 ------------- export --------------
 function HUD_OnSize( type, cx, cy )
+	if SIZE_MAXIMIZED~=type and SIZE_RESTORED~=type then return end
 	wincx, wincy = cx, cy
 	message_OnSize(type, cx, cy )
 	UI_OnSize( type, cx, cy )
@@ -40,6 +41,16 @@ end
 
 local lastx,lasty = 0,0
 function HUD_FrameMove( AppTimeD )
+
+	if g_config.vr then
+		local w,h = winds3dvr.get_2dbuffer_resolution()
+		if wincx~=w or wincy~=h then
+			HUD_OnSize( SIZE_RESTORED, w, h )
+		end
+
+		mouse_message_by_ray( ControllerA, ray.new( ControllerA.getPosition(), ControllerA.getFront() ), w, h )
+
+	end
 
 	UI_OnFrameMove( AppTimeD )
 
@@ -68,6 +79,8 @@ function HUD_FrameMove( AppTimeD )
 			end
 		end
 		lastx,lasty = x,y
+
+		if g_config.vr then g_config.cameraPan = false end
 	end
 end
 

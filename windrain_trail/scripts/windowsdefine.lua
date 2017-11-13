@@ -114,6 +114,9 @@ OFN_CREATEPROMPT             = toDWORD('00002000')
 
 -- windows message --
 WM_COMMAND			= toDWORD('0111')
+WM_MOUSEMOVE                    = toDWORD('0200')
+WM_LBUTTONDOWN                  = toDWORD('0201')
+WM_LBUTTONUP                    = toDWORD('0202')
 
 
 -- input device 

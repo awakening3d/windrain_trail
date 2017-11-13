@@ -52,7 +52,7 @@ local lineheight = 20
 local leftoffset = 8
 local bottomoffset = 40
 function message_Draw( draw )
-	
+	if g_config.vr then leftoffset = 180 end
 	local y = wincy - bottomoffset - msglist.size()*lineheight
 
 	for n=1,msglist.size() do

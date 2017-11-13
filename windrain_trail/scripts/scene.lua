@@ -237,10 +237,12 @@ local function new( scene )
 							end
 
 
-	local createMaterial =	function()
+	local createMaterial =	function(name)
 								local handle=scene:create_material()
 								if (nil==handle) then return nil end -- create failed
-								return MaterialFromHandle(handle)
+								local mater = MaterialFromHandle(handle)
+								if name and mater then mater.setName(name) end
+								return mater
 							end
 	local deleteMaterial =	function(mater)
 								local bret=scene:delete_material(mater.getPointer())
@@ -325,8 +327,8 @@ local function new( scene )
 							end
 
 
-	local createPost =	function()
-								local handle=scene:create_post()
+	local createPost =	function(name)
+								local handle=scene:create_post(name)
 								if (nil==handle) then return nil end -- create failed
 								return PostFromHandle(handle)
 							end
@@ -344,6 +346,13 @@ local function new( scene )
 							local ppost,pos=scene:get_posts_next(pos)
 							return PostFromHandle(ppost),pos
 						end
+
+
+	local createShot =	function(name)
+								local handle=scene:create_shot(name)
+								if (nil==handle) then return nil end -- create failed
+								return ShotFromHandle(handle)
+							end
 
 	local getShotsHead = function()
 							return scene:get_shots_head()
@@ -437,6 +446,7 @@ local function new( scene )
 	r.getPostsHead=getPostsHead
 	r.getPostsNext=getPostsNext
 
+	r.createShot = createShot
 	r.getShotsHead=getShotsHead
 	r.getShotsNext=getShotsNext
 

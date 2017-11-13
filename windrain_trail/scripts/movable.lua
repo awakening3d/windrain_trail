@@ -82,6 +82,13 @@ local function new( movable )
 									local mov=get_mov_from_type(pmov,type)
 									return mov,type
 								end
+	local setParent			=	function(mov)
+									if (NULL==mov or nil==mov) then
+										movable:set_parent()
+									else
+										movable:set_parent( mov.getUD() )
+									end
+								end
 
 	local getChildrenHead	=	function()
 									return movable:get_children_head()
@@ -141,6 +148,7 @@ local function new( movable )
 	r.intersectSegment=intersectSegment
 
 	r.getParent=getParent
+	r.setParent=setParent
 	r.getChildrenHead=getChildrenHead
 	r.getChildrenNext=getChildrenNext
 	

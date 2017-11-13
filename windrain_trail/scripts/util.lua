@@ -15,8 +15,8 @@ function UnknownObjFromHandle(handle)
 	local obj={}
 	obj.handle=handle;
 	obj.getClassID =	function()
-							return UD_NONE;
-						end
+		return UD_NONE;
+	end
 
 	return obj
 end
@@ -85,6 +85,11 @@ function MaterialFromHandle(handle)
 	return _new_material_tb( _new_material_ud(handle) )
 end
 
+function FontFromHandle(handle)
+	return _new_font_tb( _new_font_ud(handle) )
+end
+
+
 function PostFromHandle(handle)
 	return _new_post_tb( _new_post_ud(handle) )
 end
@@ -122,6 +127,46 @@ function PlayerFromHandle(handle)
 end
 
 
+
+function ObjectFromClassID(cid, handle)
+	if (UD_LIGHT==cid) then
+		return LightFromHandle(handle)
+	elseif (UD_MOBILE==cid) then
+		return MobileFromHandle(handle)
+	elseif (UD_MOVGROUP==cid) then
+		return MovGroupFromHandle(handle)
+	elseif (UD_CLOTH==cid) then
+		return ClothFromHandle(handle)
+	elseif (UD_CLOTHEX==cid) then
+		return ClothExFromHandle(handle)
+	elseif (UD_BILLBOARD==cid) then
+		return BillboardFromHandle(handle)
+	elseif (UD_PARTICLES==cid) then
+		return ParticlesFromHandle(handle)
+	elseif (UD_SPOT==cid) then
+		return SpotFromHandle(handle)
+	elseif (UD_IMAGE2D==cid) then
+		return Image2DFromHandle(handle)
+	elseif (UD_TEXT2D==cid) then
+		return Text2DFromHandle(handle)
+	elseif (UD_CAMERA==cid) then
+		return CameraFromHandle(handle)
+	elseif (UD_SURFACE==cid) then
+		return SurfaceFromHandle(handle)
+	elseif (UD_SKINMESH==cid) then
+		return SkinMeshFromHandle(handle)
+	elseif (UD_STATICMESH==cid) then
+		return StaticMeshFromHandle(handle)
+	elseif (UD_TERRAIN==cid) then
+		return TerrainFromHandle(handle)
+	elseif (UD_OCEAN==cid) then
+		return OceanFromHandle(handle)
+	elseif (UD_PLAYER==cid) then
+		return PlayerFromHandle(handle)
+	end
+end
+
+
 function DWORDtoColor(dw)
 	r,g,b,a=DWORDtoRGBA(dw)
 	return color.new(r,g,b,a)
@@ -152,6 +197,10 @@ function GetRayFromPoint(x,y)
 	local handle=_GetRayFromPoint(x,y)
 	if (NULL==handle) then return nil end -- create failed
 	return ray.new(handle)
+end
+
+function RayIntersectTriangle( org, dir, a, b, c, bBackFace )
+	return _RayIntersectTriangle( org.x, org.y, org.z, dir.x, dir.y, dir.z, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, bBackFace )
 end
 
 function MatrixToYawPitchRoll(m)

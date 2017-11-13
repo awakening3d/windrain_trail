@@ -21,6 +21,10 @@ g_config = {
 	--cursor_arrow_info={0,0,32,32}, -- { xHotSpot, yHotSpot, nWidth, nHeight }
 	--cursor_hand_open_info={0,0,32,32},
 	--cursor_portal_info={0,0,32,32},
+	vr_cursor_scale = 0.02,
+	vr_beam_visible = true,
+	vr_beam_color = COLOR_YELLOW,
+	vr_beam_endcolor = toDWORD('00fcfc54'),
 
 	hotspotDistance = 300,
 	hide_cursor_when_no_mouse_move=true,
@@ -37,6 +41,7 @@ g_config = {
 g_world = {
 	actived_hotspot=nil,
 	disabled_hotspots={},
+	disable_all_hotspot = false,
 }
 
 g_msg = {

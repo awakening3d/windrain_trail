@@ -25,27 +25,33 @@ UD_MATRIX		=toDWORD('00000001') --matrix
 UD_MATERIAL		=toDWORD('00000002') --material
 UD_LIGHT		=toDWORD('00000003') --light
 UD_MOBILE		=toDWORD('00000004') --mobile
-UD_BILLBOARD	=toDWORD('00000005') --billbord
-UD_PARTICLES	=toDWORD('00000006') --particles
+UD_BILLBOARD		=toDWORD('00000005') --billbord
+UD_PARTICLES		=toDWORD('00000006') --particles
 UD_IMAGE2D		=toDWORD('00000007') --image2d
 UD_TEXT2D		=toDWORD('00000008') --text2d
 UD_CAMERA		=toDWORD('00000009') --camera
 UD_DRAW			=toDWORD('0000000a') --draw
 UD_SURFACE		=toDWORD('0000000b') --surface
-UD_TEXTUREPLAY	=toDWORD('0000000c') --texture play
-UD_COMMANDTAR	=toDWORD('0000000d') --command target
+UD_TEXTUREPLAY		=toDWORD('0000000c') --texture play
+UD_COMMANDTAR		=toDWORD('0000000d') --command target
 UD_SCENE		=toDWORD('0000000e') --scene
 UD_BONESANI		=toDWORD('0000000f') --bones animation
 UD_SKINMESH		=toDWORD('00000010') --skin mesh
-UD_STATICMESH	=toDWORD('00000011') --static mesh
+UD_STATICMESH		=toDWORD('00000011') --static mesh
 UD_MOVTAR		=toDWORD('00000012') --move target
-UD_TEXTURELIST	=toDWORD('00000013') --texture list
+UD_TEXTURELIST		=toDWORD('00000013') --texture list
 UD_SPOT			=toDWORD('00000014') --spot
+UD_AMPLIFIER		=toDWORD('00000015') --amplifier
 UD_MOVGROUP		=toDWORD('00000016') --mov group
+UD_SHOT			=toDWORD('00000017') --shot
 UD_CLOTH		=toDWORD('00000018') --cloth
+UD_POST			=toDWORD('00000019') --post
 UD_TERRAIN		=toDWORD('0000001a') --terrain
 UD_OCEAN		=toDWORD('0000001b') --ocean
 UD_CLOTHEX		=toDWORD('0000001c') --clothex
+UD_FONT			=toDWORD('0000001d') --font
+UD_QUATERNION		=toDWORD('0000001e') --quaternion	
+
 
 UD_RAY			=toDWORD('00000100') --ray
 UD_SEGMENT		=toDWORD('00000200') --segment
@@ -53,8 +59,15 @@ UD_PLANE		=toDWORD('00000300') --plane
 UD_BSPHERE		=toDWORD('00000400') --bounding sphere
 UD_BBOX			=toDWORD('00000500') --bounding box
 UD_FRUSTUM		=toDWORD('00000600') --frustum
+UD_TRACE		=toDWORD('00000700') --trace
+UD_D3DSURFACE		=toDWORD('00000800') --d3d surface
+UD_USERINPUT		=toDWORD('00000900') --user input struct
+
 
 UD_PLAYER		=toDWORD('00010000') --player
+UD_WEBSESSION		=toDWORD('00100000') --web session
+UD_WEBFILE		=toDWORD('00200000') --web file
 
 
---改变这个列表注意是否要更新root.lua中的clone()
+
+--改变这个列表注意是否要更新 util.lua 中的 ObjectFromClassID()

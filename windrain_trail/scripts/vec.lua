@@ -62,15 +62,14 @@ end
 local function index(v,i)
 	if (0==i) then return v.x
 	elseif (1==i) then return v.y
-	elseif (2==i) then return v.z
-	else error("out of index") end
+	elseif (2==i) then return v.z end
 end
 
 local function newindex(v,i,n)
 	if (0==i) then v.x=n
 	elseif (1==i) then v.y=n
 	elseif (2==i) then v.z=n
-	else error("out of index") end
+	else error("out of index: "..i) end
 end
 
 local function dot(v1,v2)

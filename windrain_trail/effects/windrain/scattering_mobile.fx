@@ -83,7 +83,11 @@ PS_OUTPUT mainps(VS_OUTPUT In)
 technique T0
 {
     pass P0
-    {          
+    {
+	  AlphaTestEnable=True;
+	  AlphaRef=0x40;
+	  AlphaFunc=GreaterEqual;
+
         // Any other effect state can be set here.
         VertexShader = compile vs_2_0 mainvs();
         PixelShader  = compile ps_2_0 mainps();
