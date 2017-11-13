@@ -34,42 +34,7 @@ local function new( root )
 	local clone		=	function()
 							local proot=root:clone(_GetScene())
 							if (not proot) then return nil end
-							local cid=root:get_classid()
-							if (UD_LIGHT==cid) then
-								return LightFromHandle(proot)
-							elseif (UD_MOBILE==cid) then
-								return MobileFromHandle(proot)
-							elseif (UD_MOVGROUP==cid) then
-								return MovGroupFromHandle(proot)
-							elseif (UD_CLOTH==cid) then
-								return ClothFromHandle(proot)
-							elseif (UD_CLOTHEX==cid) then
-								return ClothExFromHandle(proot)
-							elseif (UD_BILLBOARD==cid) then
-								return BillboardFromHandle(proot)
-							elseif (UD_PARTICLES==cid) then
-								return ParticlesFromHandle(proot)
-							elseif (UD_SPOT==cid) then
-								return SpotFromHandle(proot)
-							elseif (UD_IMAGE2D==cid) then
-								return Image2DFromHandle(proot)
-							elseif (UD_TEXT2D==cid) then
-								return Text2DFromHandle(proot)
-							elseif (UD_CAMERA==cid) then
-								return CameraFromHandle(proot)
-							elseif (UD_SURFACE==cid) then
-								return SurfaceFromHandle(proot)
-							elseif (UD_SKINMESH==cid) then
-								return SkinMeshFromHandle(proot)
-							elseif (UD_STATICMESH==cid) then
-								return StaticMeshFromHandle(proot)
-							elseif (UD_TERRAIN==cid) then
-								return TerrainFromHandle(proot)
-							elseif (UD_OCEAN==cid) then
-								return OceanFromHandle(proot)
-							elseif (UD_PLAYER==cid) then
-								return PlayerFromHandle(proot)
-							end
+							return ObjectFromClassID( root:get_classid(), proot )
 						end
 
 		local testFlag =	function(flag)

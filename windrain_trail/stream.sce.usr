@@ -49,11 +49,11 @@ riverwater.setNoClipMask( orDWORD( riverwater.getNoClipMask(), NOCLIPMASK_water 
 local function set_noclipmask( sectionname, mask) 
 	local pos = GetSelectionHead( sectionname )
 	while (pos) do
-	    local root
-	    root,pos = _GetSelectionNext(pos)
+	    local root,cid
+	    root,pos,cid = GetSelectionNext(pos)
+	    root = ObjectFromClassID( cid, root )
 	    if (root) then
-		local surf = SurfaceFromHandle(root) -- 暂时这样用，假设返回对象是surface，需要完善
-		surf.setNoClipMask( orDWORD( surf.getNoClipMask(), mask ) )
+		root.setNoClipMask( orDWORD( root.getNoClipMask(), mask ) )
 	    end
 	end
 end
@@ -138,6 +138,58 @@ local function hasinput() -- if player do input
 	end
 end
 
+-- bambooraft
+local raftlippertime = 0
+local lastraftrot = nil
+local lastrafsound = 0
+
+local function bambooraft_framemove( nowAppTime, AppTimeD )
+	if 'bambooraft' == GetPlayingShotName() then 
+		camera.setPosition( bbraft.getMatrix() * vec.new( 0,150,-350 ) )
+		local rot = bbraft.getRotation()
+		if not lastraftrot then lastraftrot = rot end
+		
+		--- camera flow
+		local r=camera.getRotation()
+		r.y=r.y + rot.y - lastraftrot.y
+		camera.setRotation(r)
+
+		--- ripple
+		raftlippertime = raftlippertime + AppTimeD
+		if raftlippertime > 0.3 then
+			raftlippertime = 0
+			local p = bbraft.getMatrix() * vec.new( 0, 0, -50 )
+			p.y = g_world.water_level
+			lipper.new( p + vec.new(0,0.1,0), 5, math.random()*0.5 + 0.5, 3 )
+		end
+
+		--- sound
+		if (nowAppTime - lastrafsound>8) then
+			if (math.random()<0.5) then
+				PlaySound('\\water0.wav',-1000)
+			else
+				PlaySound('\\water1.wav',-1000)
+			end
+			lastrafsound=nowAppTime
+		end
+
+		lastraftrot = rot
+
+		--- back to the house scene ---
+		if GetFrameTime()>40 and tryexitscene then
+			tryexitscene = false
+			HUD_MsgBox( 6, "要出去吗？", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_exit_stream, ID_NO )
+		end
+	else
+		if lastraftrot then
+			-- "bambooraft" shot end
+			bbraft.setPosition(bbraftStartPosition)
+			bbraft.setRotation(bbraftStartRotation)
+			pplayer.freezing(false)
+			lastraftrot = nil
+		end
+	end
+end
 
 --- Keyboard Input Messages ---
 
@@ -223,10 +275,6 @@ end
 --- app flow --
 
 local lippertime = 0
-local raftlippertime = 0
-
-local lastraftrot = nil
-local lastrafsound = 0
 
 local fishanitime ={ math.random(10,200), math.random(10,200), math.random(10,200) }
 local fishani = { 'fishani1', 'fishani2', 'fishani3' }
@@ -250,6 +298,9 @@ function FrameMove()
 		end
 	end
 
+	-- bambooraft, because this function change camera, so need executed in front of other,
+	-- as some functions like controller.getPosition() dependent on camera's info
+	bambooraft_framemove( nowAppTime, AppTimeD )
 
 	-- game
 	game_FrameMove()
@@ -268,52 +319,6 @@ function FrameMove()
 	--bksound
 	bksound_FrameMove( AppTimeD )
 
-	-- bambooraft
-	if 'bambooraft' == GetPlayingShotName() then 
-		camera.setPosition( bbraft.getMatrix() * vec.new( 0,150,-350 ) )
-		local rot = bbraft.getRotation()
-		if not lastraftrot then lastraftrot = rot end
-		
-		--- camera flow
-		local r=camera.getRotation()
-		r.y=r.y + rot.y - lastraftrot.y
-		camera.setRotation(r)
-
-		--- ripple
-		raftlippertime = raftlippertime + AppTimeD
-		if raftlippertime > 0.3 then
-			raftlippertime = 0
-			local p = bbraft.getMatrix() * vec.new( 0, 0, -50 )
-			p.y = g_world.water_level
-			lipper.new( p + vec.new(0,0.1,0), 5, math.random()*0.5 + 0.5, 3 )
-		end
-
-		--- sound
-		if (nowAppTime - lastrafsound>8) then
-			if (math.random()<0.5) then
-				PlaySound('\\water0.wav',-1000)
-			else
-				PlaySound('\\water1.wav',-1000)
-			end
-			lastrafsound=nowAppTime
-		end
-
-		lastraftrot = rot
-
-		--- back to the house scene ---
-		if GetFrameTime()>40 and tryexitscene then
-			tryexitscene = false
-			HUD_MsgBox( 6, "要出去吗？", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_exit_stream, ID_NO )
-		end
-	else
-		if lastraftrot then
-			-- "bambooraft" shot end
-			bbraft.setPosition(bbraftStartPosition)
-			bbraft.setRotation(bbraftStartRotation)
-			pplayer.freezing(false)
-			lastraftrot = nil
-		end
-	end
 	
 	---- 蚯蚓 ----
 	if g_qiuyin_count<3 then
@@ -371,6 +376,8 @@ function FrameMove()
 	-- enter dungeon
 	if enter_dungeon then
 		game_LoadScene('dungeon.sce')
+		-- enable the out hotspot:
+		g_world.disabled_hotspots['hotspot_out']=false
 		return
 	end
 
@@ -388,7 +395,8 @@ function Render2D(draw)
 	game_Render2D(draw)
 end
 
-function Render3D(draw)
+function Render3D(draw, mode)
+	game_Render3D(draw, mode)
 end
 
 function OnRestoreDevice()

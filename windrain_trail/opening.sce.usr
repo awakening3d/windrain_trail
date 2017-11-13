@@ -1,6 +1,31 @@
-package.path = package.path .. ";.\\lua_game\\?.lua;.\\lua_ui\\?.lua;.\\lua_ani\\?.lua"
+local extrapath = ";.\\lua_game\\?.lua;.\\lua_ui\\?.lua;.\\lua_ani\\?.lua"
+if not string.find( package.path, extrapath, 1, true ) then
+	package.path = package.path .. extrapath
+end
+
+
 require 'winstyle'
 require 'game'
+require 'sword'
+
+
+if ( IDYES == wnd.MessageBox( "以VR模式启动吗?", g_wincfg.winTitle, orDWORD(MB_YESNO,MB_ICONQUESTION) ) ) then
+	g_config.vr = true
+else
+	g_config.vr = false
+end
+
+
+if g_config.vr then
+	lgLoadPackage(PACKAGE_VR)
+	require 'winds3dvr'
+	DoConsoleCommand('r_host_render 0')
+	DoConsoleCommand('r_oblique_clip 1') -- for water rendering
+	--winds3dvr.overlay_show(1)
+end
+
+----- load ui module -----
+lgLoadPackage( PACKAGE_UI )
 
 
 wnd.SetWindowText( GetMainWnd(), g_wincfg.winTitle )
@@ -18,6 +43,13 @@ function mouse_rollover_button()
 	local snds = {'\\throw4.wav', '\\throw1.wav', '\\throw.wav', '\\sword.wav' }
 	PlaySound( snds[  math.random(1,4) ] )
 end
+
+
+local swordmov = nil
+if g_config.vr then
+	swordmov = sword.createSwordMobiles()
+end
+
 
 -- 开始 start shot_end
 local fadeouttime = 9999999
@@ -89,18 +121,34 @@ end
 function OnActivate(nActive,nMinimized)
 end
 
+local winwidth, winheight
 function OnSize( type, cx, cy )
 	winstyle_OnSize( type, cx, cy )
+	winwidth, winheight = cx, cy
 end
 
 
 --- app flow --
 function FrameMove()
+	if g_config.vr then
+		mouse_message_by_ray( ControllerA, ray.new( ControllerA.getPosition(), ControllerA.getFront() ), winwidth, winheight )
+	end
+
 	if GetAppTime() - fadeouttime > 3 then
 		game_LoadScene('zhufangzi.sce','start')
 		g_wincfg.is_full_drag=false
+		--if g_config.vr then winds3dvr.overlay_show(0) end
 		return
 	end
+
+	if not g_config.vr then return end
+	if swordmov then
+		local mat = matrix.new()
+		mat.translation(-ControllerA.getFront()*15)
+		swordmov.setMatrix( ControllerA.getMatrix() * mat )
+	end
+
+
 end -- of FrameMove
 
 

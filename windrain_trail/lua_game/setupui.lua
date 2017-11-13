@@ -72,51 +72,62 @@ local optionlayer = nil
 local inventorylayer = nil
 
 
-
 local optionW =	200
 local optionH = 400
 
 local inventoryW = 200
-local inventoryH = 550
+local inventoryH = 500
 
 
 local function resizeUI()
 	local r = rect.new(0,wy - 35, wx, wy)
 	if baselayer then baselayer.setRect( r ) end
+	if g_config.vr then baselayer.setBackgroundColor() end -- completely transparent 
 
+	local xofs = 0
+	if g_config.vr then xofs = 150 end
 	local br = baselayer.butOption.getRect()
-	br.offset( r.right-45 - br.left, 0 )
+	br.offset( r.right-45-xofs - br.left, 0 )
 	baselayer.butOption.setRect( br )
 
 	br = baselayer.butInventory.getRect()
-	br.offset( r.right-90 - br.left, 0 )
+	br.offset( r.right-90-xofs - br.left, 0 )
 	baselayer.butInventory.setRect( br )
 
 	br = baselayer.butWeapon.getRect()
-	br.offset( r.right-140 - br.left, 0 )
+	br.offset( r.right-140-xofs - br.left, 0 )
 	baselayer.butWeapon.setRect( br )
 
 	r = rect.new(wx-20 - optionW, wy - optionH - 40, wx-20, wy - 40 )
+	if g_config.vr then r.offset( -200, -50 ) end
 	if optionlayer then optionlayer.setRect( r ) end
 	r = rect.new(wx - inventoryW - 100, wy - inventoryH - 35, wx - 100, wy - 35 )
+	if g_config.vr then r.offset( -200, 0 ) end
 	if r.top<0 then r.top = 0 end
 	if (inventorylayer) then inventorylayer.setRect( r ) end
+
+	if g_config.vr then
+		local r = baselayer.txtChat.getRect()
+		r.offset(40-r.left,0)
+		baselayer.txtChat.setRect(r)
+
+		r = baselayer.editChat.getRect()
+		r.offset(80-r.left,0)
+		baselayer.editChat.setRect(r)
+	end
 end
 
 local function setupBaseUI()
 	if baselayer then return end
 	baselayer = uilayer.new(1)
 
-	baselayer.addStatic( 0, '聊天：', 0,0,40,32 )
+	baselayer.txtChat = baselayer.addStatic( 0, '聊天：', 0,0,40,32 )
 	baselayer.editChat = baselayer.addIMEEditBox(  ID_CHAT, '你好吗', 40, 0, 200, 32 )
 
 	baselayer.butWeapon = baselayer.addButton( ID_WEAPON, '武 器', 660, 6, 40, 20)
 	baselayer.butInventory = baselayer.addButton( ID_INVENTORY, '物 品', 710, 6, 40, 20)
 	baselayer.butOption = baselayer.addButton( ID_OPTION, '选 项', 755, 6, 40, 20 )
 
---	baselayer.editChat.setVisible(false)
---	baselayer.butInventory.setVisible(false)
---	baselayer.butOption.setVisible(false)
 	baselayer.butWeapon.setVisible(false)
 
 	resizeUI()
@@ -374,6 +385,7 @@ end
 
 function UI_OnSize( type, cx, cy )
 	wx,wy=cx,cy
+	ui_OnWindowSizeChange(cx,cy)
 	setupBaseUI()
 	baselayer.show(true)
 	resizeUI()
@@ -408,3 +420,43 @@ function OnBrightnessContrastChanged( bright, contrast )
 	optionlayer.sliderContrast.setValue( contrast * 50 )
 end
 
+
+if not g_config.vr then return end
+
+
+gDuckInput=false
+gJumpInput=false
+
+local _onControllerButtonPress = onControllerButtonPress
+function onControllerButtonPress( deviceID, buttonid )
+	if _onControllerButtonPress then
+		if _onControllerButtonPress( deviceID, buttonid ) then return end
+	end
+	if deviceID == ControllerA.getDeviceID() then
+		if buttonid == ControllerButtonID.ApplicationMenu then
+			UIevent_OnButtonDown(0, ID_WEAPON ) -- 模拟武器按钮
+			return true
+		elseif buttonid == ControllerButtonID.Touchpad then
+			local x,y = ControllerA.getAxis()
+			if y < 0 then
+				gDuckInput=true
+			else
+				gJumpInput=true
+			end
+			return true
+		end
+	end
+end
+
+local _onControllerButtonUnpress = onControllerButtonUnpress
+function onControllerButtonUnpress( deviceID, buttonid )
+	if _onControllerButtonUnpress then
+		if _onControllerButtonUnpress( deviceID, buttonid ) then return end
+	end
+	if deviceID == ControllerA.getDeviceID() then
+		if buttonid == ControllerButtonID.Touchpad then
+			gDuckInput, gJumpInput = false, false
+			return true
+		end
+	end
+end

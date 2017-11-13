@@ -76,7 +76,7 @@ end
 function Render2D(draw)
 end
 
-function Render3D(draw)
+function Render3D(draw,mode)
 end
 
 function OnRestoreDevice()

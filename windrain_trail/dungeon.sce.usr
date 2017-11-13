@@ -15,11 +15,14 @@ g_hotspot_function[ 'hotspot_out'] = function()
 end
 
 g_hotspot_function[ 'hotspot_door'] = function()
-	msgBox("门似乎被封住了。", "风雨江湖")
+	msgBox("路似乎被堵住了。", "风雨江湖")
 end
 
 local fadeouttime = 9999999
 function exit_dungeon_scene()
+	-- disable the out hotspot:
+	g_world.disabled_hotspots['hotspot_out']=true
+
 	PlayAnimate('fadeout')
 	fadeouttime = GetAppTime()
 end
@@ -144,7 +147,8 @@ function Render2D(draw)
 	game_Render2D(draw)
 end
 
-function Render3D(draw)
+function Render3D(draw, mode)
+	game_Render3D(draw, mode)
 end
 
 function OnRestoreDevice()

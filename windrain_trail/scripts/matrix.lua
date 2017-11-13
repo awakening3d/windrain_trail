@@ -23,7 +23,11 @@ local function new( matud )
 							return matud:is_identity()
 						end
 	local translation =	function(x,y,z)
-							matud:translation(x,y,z)
+							if type(x) == 'table' then
+								matud:translation( x.x, x.y, x.z )
+							else
+								matud:translation(x,y,z)
+							end
 						end
 	local rotationx	=	function(angle)
 							matud:rotationx(angle)
@@ -40,6 +44,10 @@ local function new( matud )
 	local rotationYawPitchRoll = function(yaw,pitch,roll)
 									matud:rotation_yaw_pitch_roll(yaw,pitch,roll)
 								 end
+	local rotationQuaternion = function( qua )
+							matud:rotation_quaternion( qua.getUD() )
+						end
+
 
 	local scaling	=	function(x,y,z)
 							matud:scaling(x,y,z)
@@ -48,6 +56,21 @@ local function new( matud )
 	local determinant = function()
 							return matud:determinant()
 						end
+	local getPosition = function()
+							return vec.new( matud:get_position() )
+						end
+	local getFront = function()
+							return vec.new( matud:get_front() )
+						end
+	local getRight = function()
+							return vec.new( matud:get_right() )
+						end
+	local getUp = function()
+							return vec.new( matud:get_up() )
+						end
+
+	
+	
 	local clone = function()
 							return new( _new_matrix_ud( matud:get_pointer() ) )
 						end
@@ -66,8 +89,15 @@ local function new( matud )
 	r.rotationz=rotationz
 	r.rotationAxis=rotationAxis
 	r.rotationYawPitchRoll=rotationYawPitchRoll
+	r.rotationQuaternion=rotationQuaternion
 	r.scaling=scaling
 	r.determinant=determinant
+
+	r.getPosition = getPosition
+	r.getFront = getFront
+	r.getRight = getRight
+	r.getUp = getUp
+
 	r.clone=clone
 
 	setmetatable(r, mt)
@@ -93,7 +123,11 @@ _new_matrix_tb=new
 
 matrix	=	{
 	new	=	function(handle) --handle里的内容是拷贝到matrix table中，并且handle可以为空。 
-				return _new_matrix_tb( _new_matrix_ud(handle) )
+				local m = _new_matrix_tb( _new_matrix_ud(handle) )
+				if type(handle) == 'table' and handle.getClassID and UD_QUATERNION==handle.getClassID() then
+					m.rotationQuaternion( handle )
+				end
+				return m
 			end,
 	VectorTransformCoord =	function(m,v)
 								return vec.new( _matrix_transform_coord( m.getUD(), v.x, v.y, v.z ) )

@@ -36,6 +36,18 @@ local function new( layernum )
 		return layerud:set_rect( r.left, r.top, r.right, r.bottom )
 	end
 
+	local function getBackgroundColor()
+		return layerud:get_background_color()
+	end
+
+	local function setBackgroundColor( colorTopLeft, colorTopRight, colorBottomLeft, colorBottomRight )
+		if colorTopRight then
+			layerud:set_background_color(colorTopLeft, colorTopRight, colorBottomLeft, colorBottomRight )
+		else
+			layerud:set_background_color(colorTopLeft, colorTopLeft, colorTopLeft, colorTopLeft )
+		end
+	end
+
 	local function addStatic( id, text, x, y, width, height )
 		local sta = layerud:add_static( id, text, x, y, width, height )
 		if not sta then return end
@@ -97,6 +109,8 @@ local function new( layernum )
 	r.isVisible = isVisible
 	r.getRect = getRect
 	r.setRect = setRect
+	r.getBackgroundColor = getBackgroundColor
+	r.setBackgroundColor = setBackgroundColor
 	r.addStatic = addStatic
 	r.addButton = addButton
 	r.addCheckBox = addCheckBox

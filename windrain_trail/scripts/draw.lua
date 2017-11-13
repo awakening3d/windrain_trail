@@ -29,6 +29,41 @@ local function new( draw )
 								return draw:set_rendertarget(surf.getUD(),index)
 							end
 
+	local getTextExtent	=	function(text)
+								return draw:get_text_extent_2d(text)
+							end
+
+	local getFont		=	function()
+								local handle=draw:get_font()
+								if (NULL==handle) then return nil end
+								return FontFromHandle(handle)
+							end
+	local setFont		=	function(mfont)
+							if (nil==mfont) then return draw:set_font(_new_font_ud(nil)) end
+							if (type(mfont) ~= "table") then error("font expected") end
+							draw:set_font(mfont.getUD())
+						end
+
+	local createFont =	function(height, fontname, texsize)
+								local handle=draw:create_font(height, fontname, texsize)
+								if (nil==handle) then return nil end -- create failed
+								return FontFromHandle(handle)
+							end
+	local deleteFont =	function(font)
+								local bret=draw:delete_font(font.getPointer())
+								if bret then
+									_InvalidateUserdata(font.getUD())
+								end
+								return bret
+							end
+	local getFontsHead =function()
+								return draw:get_fonts_head()
+							end
+	local getFontsNext =function(pos)
+								local pfont,pos=draw:get_fonts_next(pos)
+								return FontFromHandle(pfont),pos
+							end
+
 
 	local r=_new_udhead_tb(draw)
 
@@ -38,6 +73,13 @@ local function new( draw )
 	r.setBlendMode=setBlendMode
 	r.getRenderTarget=getRenderTarget
 	r.setRenderTarget=setRenderTarget
+	r.getTextExtent=getTextExtent
+	r.getFont = getFont
+	r.setFont = setFont
+	r.createFont = createFont
+	r.deleteFont = deleteFont
+	r.getFontsHead = getFontsHead
+	r.getFontsNext = getFontsNext
 
 	r.BLEND_ZERO				= toDWORD('00000001')
 	r.BLEND_ONE                	= toDWORD('00000002')
@@ -73,11 +115,11 @@ local function new2d( draw )
 	local filltriangle =	function(p1,p2,p3)
 								return draw:filltriangle_2d(p1.x,p1.y,p2.x,p2.y,p3.x,p3.y)
 							end
-	local _circle	=	function(center,radius,segments)
-							return draw:circle_2d(center.x,center.y, radius, segments)
+	local _circle	=	function(center,radius,segments, seg)
+							return draw:circle_2d(center.x,center.y, radius, segments, seg)
 						end
-	local fillcircle=	function(center,radius,segments)
-							return draw:fillcircle_2d(center.x,center.y, radius, segments)
+	local fillcircle=	function(center,radius,segments, seg)
+							return draw:fillcircle_2d(center.x,center.y, radius, segments, seg)
 						end
 	local _rect		=	function(r)
 							return draw:rect_2d(r.left,r.top,r.right,r.bottom)
@@ -85,12 +127,9 @@ local function new2d( draw )
 	local fillrect	=	function(r)
 							return draw:fillrect_2d(r.left,r.top,r.right,r.bottom)
 						end
-	local textout	=	function(x,y,text)
-							return draw:textout_2d(x,y,text)
+	local textout	=	function(x,y,text, widthscale, heightscale)
+							return draw:textout_2d(x,y,text, widthscale, heightscale)
 						end
-	local getTextExtent	=	function(text)
-								return draw:get_text_extent_2d(text)
-							end
 	local blt	=		function(x,y,tex)
 							return draw:blt_2d(x,y,tex)
 						end
@@ -109,7 +148,6 @@ local function new2d( draw )
 	d.rect=_rect
 	d.fillrect=fillrect
 	d.textout=textout
-	d.getTextExtent=getTextExtent
 	d.blt=blt
 	d.stretchblt=stretchblt
 	return d
@@ -132,21 +170,54 @@ local function new3d( draw )
 	local _triangle =		function(v1,v2,v3)
 								return draw:triangle_3d(v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z)
 							end
-	local filltriangle =	function(v1,v2,v3)
-								return draw:filltriangle_3d(v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z)
-							end
-	local _circle	=	function(center,dir,radius,segments,newmode)
-							return draw:circle_3d(center.x,center.y,center.z, dir.x,dir.y,dir.z, radius, segments, newmode)
+	local filltriangle =	function(v1,v2,v3, t1,t2,t3, tex)
+					if tex then
+						return draw:fill_triangle_3d_tex(v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z, t1.x,t1.y, t2.x,t2.y, t3.x,t3.y, tex)
+					else
+						return draw:filltriangle_3d(v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z)
+					end
+				end
+
+	local rect =	function( corner, width, height)
+				moveto( corner )
+				lineto( corner + width )
+				lineto( corner + width + height )
+				lineto( corner + height )
+				lineto( corner)
+			end
+
+	local fillrect = function( corner, width, height, tex )
+				local p1 = corner + width
+				local p2 = p1 + height
+				local p3 = corner + height
+				if tex then
+					filltriangle( corner, p1, p2, point.new(0,0), point.new(1,0), point.new(1,1), tex )
+					filltriangle( corner, p2, p3, point.new(0,0), point.new(1,1), point.new(0,1), tex )
+				else
+					filltriangle( corner, p1, p2 )
+					filltriangle( corner, p2, p3 )
+				end
+			end
+
+
+	local _circle	=	function(center,dir,radius,segments,newmode, seg)
+							return draw:circle_3d(center.x,center.y,center.z, dir.x,dir.y,dir.z, radius, segments, newmode, seg)
 						end
-	local fillcircle=	function(center,dir,radius,segments,newmode)
-							return draw:fillcircle_3d(center.x,center.y,center.z, dir.x,dir.y,dir.z, radius, segments, newmode)
+	local fillcircle=	function(center,dir,radius,segments,newmode, seg)
+							return draw:fillcircle_3d(center.x,center.y,center.z, dir.x,dir.y,dir.z, radius, segments, newmode, seg)
 						end
 	local _box		=	function(min,max)
 							return draw:box_3d(min.x,min.y,min.z,max.x,max.y,max.z)
 						end
-	local cylinder	=	function(center,dir,height,radius1,radius2,segments,newmode)
-							return draw:cylinder_3d(center.x,center.y,center.z, dir.x,dir.y,dir.z, height, radius1, radius2, segments, newmode)
+	local cylinder	=	function(center,dir,height,radius1,radius2,segments,newmode, seg)
+							return draw:cylinder_3d(center.x,center.y,center.z, dir.x,dir.y,dir.z, height, radius1, radius2, segments, newmode, seg)
 						end
+
+	local textout =		function( org, widthdir, heightdir, text, widthscale, heightscale )
+					return draw:textout_3d( org.x, org.y, org.z, widthdir.x, widthdir.y, widthdir.z, heightdir.x, heightdir.y, heightdir.z, text, widthscale, heightscale )
+				end
+
+
 	local setmatrix =	function(mat)
 							if (type(mat) ~= "table") then error("matrix expected") end
 							local handle=draw:set_matrix(mat.getUD());
@@ -163,10 +234,13 @@ local function new3d( draw )
 	d.lineto=lineto
 	d.triangle=_triangle
 	d.filltriangle=filltriangle
+	d.rect = rect
+	d.fillrect = fillrect
 	d.circle=_circle
 	d.fillcircle=fillcircle
 	d.box=_box
 	d.cylinder=cylinder
+	d.textout=textout
 	d.setmatrix=setmatrix
 	d.ztest=ztest
 	return d
@@ -182,8 +256,8 @@ function _Render2D()
 	if (Render2D) then Render2D(draw2d) end
 end
 
-function _Render3D()
-	if (Render3D) then Render3D(draw3d) end
+function _Render3D( mode )
+	if (Render3D) then Render3D( draw3d, mode ) end
 end
 
 

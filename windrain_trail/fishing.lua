@@ -38,18 +38,29 @@ goodsUseFunction[ goodsID.diaogan ] = function()
 	if IsPlayingShot() then return end
 
 	local x,y=wnd.ScreenToClient(GetMainWnd(),wnd.GetCursorPos())
-	local ray=GetRayFromPoint(x,y)
+
+	local ry
+	if g_config.vr then
+		ry = ray.new( ControllerA.getPosition(), ControllerA.getFront() )
+	else
+		ry = GetRayFromPoint( x,y )
+	end
 
 	local fDistance=99999999
 
 	local pos = GetSelectionHead( 'waterblockers' )
 	while (pos) do
-	    local root
-	    root,pos = _GetSelectionNext(pos)
+	    local root,cid
+	    root,pos,cid = GetSelectionNext(pos)
+	    if UD_SURFACE==cid then
+		root = ObjectFromClassID( cid, root )
+	    else
+		root = nil
+	    end
+
 	    if (root) then
-		local surf = SurfaceFromHandle(root) -- 暂时这样用，假设返回对象是surface，需要完善
-		local bInter, fDis = surf.intersectRay(ray,true,true)
-		if (bInter and (fDis<fDistance) ) then
+		local bInter, fDis = root.intersectRay(ry,true,true)
+		if bInter and fDis<fDistance then
 			fDistance=fDis
 		end
 	    end
@@ -97,8 +108,8 @@ goodsUseFunction[ goodsID.diaogan ] = function()
 
 	-- 扔浮标
 	hotspot_diaogan.dobber = dobber.new()
-	hotspot_diaogan.dobber.setPosition( camera.getPosition() + vec.new( 0, 50, 0 ) )
-	hotspot_diaogan.dobber.setVelocity( camera.getFront() * 1000 )
+	hotspot_diaogan.dobber.setPosition( finalcamera.getPosition() + vec.new( 0, 50, 0 ) )
+	hotspot_diaogan.dobber.setVelocity( finalcamera.getFront() * 1000 )
 	if math.random()>0.5 then
 		PlaySound('\\throw.wav',-2000)
 	else

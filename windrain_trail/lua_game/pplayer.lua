@@ -79,13 +79,27 @@ local function pplayer_onSceneLoaded()
 		return handweapon
 	end
 
+
+	local timesum = 0
+
 	local lippertime = 0
 	pplayer.frameMove = function( AppTimeD )
 
 		if pplayer.isFreezing() then return end
 
 		--- weapon ---
-		if handweapon then handweapon.frameMove( AppTimeD ) end
+		if handweapon then
+			handweapon.frameMove( AppTimeD )
+			g_config.vr_beam_visible = false
+		else
+			g_config.vr_beam_visible = true
+		end
+		
+		timesum = timesum + AppTimeD
+		if timesum < 0.033 then return end
+		AppTimeD = timesum
+		timesum = 0
+
 
 		--- player movment---
 		player.setJumpmoveStep(1)
@@ -102,6 +116,18 @@ local function pplayer_onSceneLoaded()
 				plymt.setGravityScale(0)
 			end
 		end
+		
+		-- move player in vr mode
+		if g_config.vr then
+			local x,y = ControllerA.getAxis()
+			if x and y and (x~=0 or y~=0) then
+				if y>0 or not ControllerA.isButtonPressed( ControllerButtonID.Touchpad ) then
+				   local vel = (ControllerA.getFront() * y + ControllerA.getRight() * x) * AppTimeD * fMoveStep * 16
+				   vel.y = 0
+				   player.go( vel )
+				end
+			end
+		end
 
 		--- move to target pos ---
 		if (g_world.char_targetPos) then
@@ -115,7 +141,7 @@ local function pplayer_onSceneLoaded()
 				player.getMovTar().setVelocity(player.getMovTar().getVelocity()*0.3)
 			else
 				vDir = vDir / fDirLen * fMoveStep * 0.3
-				player.go(vDir)
+				player.go(vDir*AppTimeD*32)
 			end
 			
 			
@@ -130,8 +156,11 @@ local function pplayer_onSceneLoaded()
 			end
 		end
 
+		
+		local qingong = wnd.IsKeyDown(VK_SHIFT)
+		if g_config.vr then qingong = ControllerA.isButtonPressed( ControllerButtonID.Grip ) end
 
-		if wnd.IsKeyDown(VK_SHIFT) then -- Çá¹¦
+		if qingong then -- Çá¹¦
 			if pplayer.zhengqi>0 then
 				pplayer.go( vec.new(0,600 * pplayer.zhengqi * AppTimeD,0) )
 				pplayer.zhengqi = pplayer.zhengqi - AppTimeD
@@ -223,6 +252,13 @@ local function pplayer_onSceneLoaded()
 		elseif ( wnd.IsKeyDown( VK_CONTROL ) ) then
 			userinput.setDuck(true)
 		end
+
+		if gDuckInput then
+			userinput.setDuck(true)
+		elseif gJumpInput then
+			userinput.setJump(true)
+		end
+
 
 		if pplayer.isFreezing() then
 			userinput.clear()

@@ -139,6 +139,8 @@ end
 
 
 function winstyle_Render2D(draw)
+	
+	if g_config.vr then return end
 
 	if IsFullScreen() then return end
 
