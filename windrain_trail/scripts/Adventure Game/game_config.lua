@@ -13,11 +13,12 @@ g_config = {
 	--cursor_arrow_info={0,0,32,32}, -- { xHotSpot, yHotSpot, nWidth, nHeight }
 	--cursor_hand_open_info={0,0,32,32},
 	--cursor_portal_info={0,0,32,32},
-
-	vr_teleport_time = 3,
-	vr_action_time = 3,
+	vr_controller_enable = false,
+	vr_beam_enable = true,
 	vr_beam_color = COLOR_YELLOW,
 	vr_beam_endcolor = toDWORD('00fcfc54'),
+	vr_teleport_time = 3,
+	vr_action_time = 3,
 	vr_focus_circle_color = toDWORD('88fcfc54'),
 	vr_focus_circle_radius = 10,
 	vr_cursor_scale = 0.001,

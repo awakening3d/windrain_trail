@@ -493,6 +493,13 @@ function game_OnSceneLoaded()
 	
 	lastmousetime=0
 	game_OnMouseMove(mx,my) -- º”‘ÿcursorŒ∆¿Ì
+
+	if g_config.vr then
+		local FOV, NearPlane, FarPlane = FovViewDistance(0,0,0)
+		FovViewDistance( FOV, NearPlane, FarPlane )
+		winds3dvr.near_clip(NearPlane)
+		winds3dvr.far_clip(FarPlane)
+	end
 end
 
 

@@ -24,15 +24,15 @@ local function new( terrain )
 	local setStyle	=	function(style)
 							terrain:set_style(style)
 						end
-	local intersectRay	=	function(_ray,bCalcDis,bIgnoreBack)
-								return terrain:intersect_ray(_ray.getUD(),bCalcDis,bIgnoreBack)
+	local intersectRay	=	function(_ray,bCalcDis,bIgnoreBack,hollow)
+								return terrain:intersect_ray(_ray.getUD(),bCalcDis,bIgnoreBack,hollow)
 							end
-	local intersectSegment	=	function(_segment,bCalcDis,bIgnoreBack)
-									return terrain:intersect_segment(_segment.getUD(),bCalcDis,bIgnoreBack)
+	local intersectSegment	=	function(_segment,bCalcDis,bIgnoreBack,hollow)
+									return terrain:intersect_segment(_segment.getUD(),bCalcDis,bIgnoreBack,hollow)
 								end
 
-	local getAlt =	function(x,z)
-						local alt, nx,ny,nz = terrain:get_alt(x,z)
+	local getAlt =	function(x,z,hollow)
+						local alt, nx,ny,nz = terrain:get_alt(x,z,hollow)
 						return alt, vec.new(nx,ny,nz)
 					end
 	local setAlt =	function(nx,nz,alt,bUpdate)

@@ -1,0 +1,196 @@
+local extrapath = ";.\\lua_game\\?.lua;.\\lua_ui\\?.lua;.\\lua_ani\\?.lua"
+if not string.find( package.path, extrapath, 1, true ) then
+	package.path = package.path .. extrapath
+end
+
+lgLoadPackage( PACKAGE_UI )
+
+require 'winstyle'
+require 'game'
+require 'procani'
+require 'pplayer'
+require 'hud'
+require 'bksound'
+
+
+game_OnSceneLoaded()
+
+
+
+----- atmosphere -----
+require 'scripts\\Scattering\\Sun'
+require 'scripts\\Scattering\\Atmosphere'
+
+g_world.atmomaterlist ={}
+local pos=scene.getMaterialsHead()
+while (pos) do
+	local mater
+	mater,pos=scene.getMaterialsNext(pos)
+	if mater then add_to_list(g_world.atmomaterlist, mater) end
+end
+
+
+sun=Sun.new( g_world.atmomaterlist )
+atmo=Atmosphere.new( g_world.atmomaterlist )
+
+
+
+
+--- stream ---
+g_hotspot_function[ 'hotspot_stream'] = function()
+	msgBox("È¥ÍùÍüÓÇ¹ÈÂð£¿", "·çÓê½­ºþ", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_enter_stream, ID_NO )
+end
+
+function enter_stream_scene()
+	game_LoadScene('stream.sce')
+end
+
+
+--- Keyboard Input Messages ---
+
+function OnKeyDown(nChar)
+	 HUD_OnKeyDown( nChar )
+end
+
+function OnKeyUp(nChar)
+end
+
+function OnChar(nChar)
+end
+
+function OnKillFocus()
+end
+
+function OnSetFocus()
+end
+
+
+
+--- Mouse Input Messages ---
+function OnMouseMove(x,y)
+	game_OnMouseMove(x,y)
+end
+
+function OnMouseWheel(delta)
+end
+
+function OnLButtonDown(x,y)
+	game_OnLButtonDown(x,y)
+end
+
+function OnLButtonUp(x,y)
+	if  game_OnLButtonUp(x,y) then return end
+
+	pplayer.OnLButtonUp(x,y)
+
+end
+
+function OnLButtonDblClk(x,y)
+end
+
+
+function OnRButtonDown(x,y)
+end
+
+function OnRButtonUp(x,y)
+	HUD_OnRButtonUp(x,y)
+end
+
+function OnRButtonDblClk(x,y)
+end
+
+
+function OnMButtonDown(x,y)
+end
+
+function OnMButtonUp(x,y)
+end
+
+function OnMButtonDblClk(x,y)
+end
+
+
+
+--- Window Messages --
+
+function OnActivate(nActive,nMinimized)
+end
+
+function OnSize( type, cx, cy )
+	winstyle_OnSize( type, cx, cy )
+	game_OnSize(type,cx,cy)
+	HUD_OnSize( type, cx, cy )
+end
+
+
+--- app flow --
+
+local lastAppTime=GetAppTime()
+function FrameMove()
+
+	local nowAppTime=GetAppTime()
+	local AppTimeD=nowAppTime-lastAppTime;
+	lastAppTime=nowAppTime;
+
+	-- game
+	game_FrameMove()
+
+	-- player
+	pplayer.frameMove( AppTimeD )
+
+	-- obj ani
+	ani_framemove(AppTimeD)
+
+	-- hud
+	HUD_FrameMove( AppTimeD )
+
+	--bksound
+	bksound_FrameMove( AppTimeD )
+
+
+	--- snow ---
+	local pp = player.getPosition()
+	if geoterrain.getAlt( pp.x, pp.z, true ) > pp.y then
+		snow.hide(true)
+	else
+		snow.hide(false)
+	end
+
+	--- rope ---	
+	if (BBOXR_OUT ~= rope.getBoundingBox().boxRelation( player.getBoundingBox() ))  and ( pp.y - geoterrain.getAlt(pp.x,pp.z) ) < 50 then -- player touch rope
+		player.getMovTar().setGradientLimit(0.1)
+	else
+		player.getMovTar().setGradientLimit(0.7)
+	end
+
+	
+end -- of FrameMove
+
+
+function Render2D(draw)
+	HUD_Render2D(draw)
+	winstyle_Render2D(draw)
+	game_Render2D(draw)
+end
+
+function Render3D(draw, mode)
+	game_Render3D(draw, mode)
+end
+
+function OnRestoreDevice()
+	HUD_OnRestoreDevice()
+
+	--atmosphere
+	atmo.setDistanceScale( 0.15 )
+	atmo.setSkyDistanceAdjust( 0.7 )
+
+	sun.setIntensity( 75 )
+	sun.setDirection( vec.new(0,1,0) )
+
+end
+
+
+--- add your own input
+function UpdateUserInput( userinput )
+	pplayer.UpdateUserInput( userinput)
+end

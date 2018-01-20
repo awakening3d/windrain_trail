@@ -124,6 +124,15 @@ function enter_dungeon_scene()
 	enter_dungeon	 = true
 end
 
+--- 青云寺 ---
+g_hotspot_function[ 'hotspot_qinyunshi'] = function()
+	msgBox("去往青云寺吗？", "风雨江湖", orDWORD(MB_YESNO,MB_ICONWARNING), ID_YES_enter_qinyunshi, ID_NO )
+end
+
+function enter_qinyunshi_scene()
+	game_LoadScene('qinyunshi.sce')
+end
+
 
 local playlandscape_time = 99999999
 local landscapeplaying = false

@@ -49,6 +49,11 @@ local function new( draw )
 								if (nil==handle) then return nil end -- create failed
 								return FontFromHandle(handle)
 							end
+	local createBMFont =	function( fontDescFile )
+								local handle=draw:create_bmfont( fontDescFile )
+								if (nil==handle) then return nil end -- create failed
+								return FontFromHandle(handle)
+							end
 	local deleteFont =	function(font)
 								local bret=draw:delete_font(font.getPointer())
 								if bret then
@@ -77,6 +82,7 @@ local function new( draw )
 	r.getFont = getFont
 	r.setFont = setFont
 	r.createFont = createFont
+	r.createBMFont = createBMFont
 	r.deleteFont = deleteFont
 	r.getFontsHead = getFontsHead
 	r.getFontsNext = getFontsNext
