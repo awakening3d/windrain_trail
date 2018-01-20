@@ -1,6 +1,6 @@
 --[[
 	Virtual Keys, Standard Set
-]]
+--]]
 
 VK_LBUTTON        = 0x01
 VK_RBUTTON        = 0x02
@@ -106,7 +106,7 @@ VK_SCROLL         = 0x91
  * VK_L* & VK_R* - left and right Alt, Ctrl and Shift virtual keys.
  * Used only as parameters to GetAsyncKeyState() and GetKeyState().
  * No other API or message will distinguish left and right keys in this way.
-]]
+--]]
 
 VK_LSHIFT         = 0xA0
 VK_RSHIFT         = 0xA1

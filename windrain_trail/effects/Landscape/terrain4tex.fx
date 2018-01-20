@@ -62,6 +62,7 @@ sampler texAlpha=sampler_state {
 	Texture = <tTX0>;
 	ADDRESSU=Clamp;
 	ADDRESSV=Clamp;
+	MIPFILTER = None;
 };
 
 sampler texBase1=sampler_state {
@@ -92,21 +93,17 @@ sampler texLightmap=sampler_state {
 	Texture = <tTX5>;
 	ADDRESSU=Clamp;
 	ADDRESSV=Clamp;
-	//MIPFILTER = None;
+	MIPFILTER = None;
+	//MINFILTER = ANISOTROPIC;
+	//MAGFILTER = ANISOTROPIC;
+	//MAXANISOTROPY = 8;
 };
 
 
 PS_OUTPUT mainps(VS_OUTPUT In)
 {
 	PS_OUTPUT Out;
-/*
-	float4 alpha = tex2D(texAlpha, In.uv);
-	float3 base1 = tex2D(texBase1, In.uv*512);
-	float3 base2 = tex2D(texBase2, In.uv*512);
-	float3 base3 = tex2D(texBase3, In.uv*32);
-	float3 base4 = tex2D(texBase4, In.uv*256);
-	float3 lightmap = tex2D(texLightmap, In.uv);
-*/
+
 	float4 alpha = tex2D(texAlpha, In.uv);
 	float3 base1 = tex2D(texBase1, In.uv*_layer_tile_param.x);
 	float3 base2 = tex2D(texBase2, In.uv*_layer_tile_param.y);
@@ -124,9 +121,9 @@ PS_OUTPUT mainps(VS_OUTPUT In)
 	Out.Color.xyz*=In.Diffuse;
 	Out.Color.xyz+=In.Specular;
 
-	Out.Color.a=1;
+	Out.Color.a = alpha.a;
 
-	//Out.Color.rgb = decal;
+	//Out.Color.rgb = alpha.rgb;
 
 	return Out;
 };
@@ -138,6 +135,10 @@ technique T0
 {
   pass P0
   {
+	  AlphaTestEnable=True;
+	  AlphaRef=0x08;
+	  AlphaFunc=Less;
+
     VertexShader = compile vs_2_0 mainvs();
     PixelShader  = compile ps_2_0 mainps();
 

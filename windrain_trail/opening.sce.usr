@@ -9,11 +9,11 @@ require 'game'
 require 'sword'
 
 
-if ( IDYES == wnd.MessageBox( "以VR模式启动吗?", g_wincfg.winTitle, orDWORD(MB_YESNO,MB_ICONQUESTION) ) ) then
-	g_config.vr = true
-else
-	g_config.vr = false
-end
+--if ( IDYES == wnd.MessageBox( "以VR模式启动吗?", g_wincfg.winTitle, orDWORD(MB_YESNO,MB_ICONQUESTION) ) ) then
+--	g_config.vr = true
+--else
+--	g_config.vr = false
+--end
 
 
 if g_config.vr then

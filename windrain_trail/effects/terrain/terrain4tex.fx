@@ -65,6 +65,7 @@ sampler texAlpha=sampler_state {
 	Texture = <tTX0>;
 	ADDRESSU=Clamp;
 	ADDRESSV=Clamp;
+	MIPFILTER = None;
 };
 
 sampler texBase1=sampler_state {
@@ -95,6 +96,7 @@ sampler texLightmap=sampler_state {
 	Texture = <tTX5>;
 	ADDRESSU=Clamp;
 	ADDRESSV=Clamp;
+	MIPFILTER = None;
 };
 
 
@@ -125,7 +127,7 @@ float4 mainps(VS_OUTPUT i, uniform bool bPS20=false, uniform bool bPS30=false) :
 	decal = lerp( decal, base3, alpha.g );
 	decal = lerp( decal, base4, alpha.b );
 
-	float4 color = 1;
+	float4 color = alpha.a;
 	color.rgb = decal * diffuseL + specularL;
 	//color.xyz*=i.Diffuse;
 	//color.xyz+=i.Specular;
@@ -141,6 +143,10 @@ technique T0
 {
   pass P1
   {
+  	AlphaTestEnable=True;
+  	AlphaRef=0x08;
+  	AlphaFunc=Less;
+
      VertexShader = compile vs_3_0 mainvs();
      PixelShader  = compile ps_3_0 mainps(true,true);
   }
@@ -153,6 +159,10 @@ technique T1
 {
   pass P1
   {
+  	AlphaTestEnable=True;
+  	AlphaRef=0x08;
+  	AlphaFunc=Less;
+
      VertexShader = compile vs_2_0 mainvs();
      PixelShader  = compile ps_2_0 mainps(true);
   }

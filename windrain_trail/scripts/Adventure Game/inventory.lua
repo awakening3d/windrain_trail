@@ -1,10 +1,11 @@
 -- inventory.lua
--- v0.3
+-- v0.31
 
 require 'item'
 
 local function _new()
 	local bShow=false
+	local b3DMode = false
 
 	local bRelativeMode=true --relative based coordinate systems
 
@@ -115,7 +116,7 @@ local function _new()
 	local function onMouseMove(x,y)
 		if (coverimage) then return true end
 
-		if not bShow then return false end
+		if b3DMode or not bShow then return false end
 
 		if (not selectedItem) then txtItemDesc='' end
 
@@ -163,7 +164,7 @@ local function _new()
 	local function onRayMove( ray )
 		if (coverimage) then return true end
 
-		if not bShow then return false end
+		if (not b3DMode) or (not bShow) then return false end
 
 		if (not selectedItem) then txtItemDesc='' end
 		--items
@@ -179,7 +180,7 @@ local function _new()
 	end
 
 	local function onLButtonDown(x,y)
-		if not bShow then return false end
+		if b3DMode or not bShow then return false end
 
 		local r
 		if bRelativeMode then
@@ -193,7 +194,7 @@ local function _new()
 	end
 
 	local function onLButtonUp(x,y)
-		if not bShow then return false end
+		if b3DMode or not bShow then return false end
 
 		if selectedItem and selectedItem.OnSelect then
 			selectedItem.OnSelect(false)
@@ -232,8 +233,19 @@ local function _new()
 		itemarea_lefttop=nil
 	end
 
+	local function is3DMode()
+		return b3DMode
+	end
+
+	local function set3DMode( mode )
+		b3DMode = mode
+		itemarea_lefttop=nil
+	end
+
 
 	local function draw(dw)
+		
+		if b3DMode then return end
 
 		--draw cover image
 		if (coverimage) then
@@ -290,7 +302,9 @@ local function _new()
 
 
 	local function draw3d(dw)
-
+		
+		if not b3DMode then return end
+		
 		--draw cover image
 		if (coverimage) then
 			local center = finalcamera.getPosition() + finalcamera.getFront() * g_config.cover_area_depth
@@ -452,6 +466,8 @@ local function _new()
 	invent.onLButtonUp=onLButtonUp
 	invent.isShow=isShow
 	invent.show=show
+	invent.is3DMode=is3DMode
+	invent.set3DMode=set3DMode
 	invent.draw=draw
 	invent.draw3d=draw3d
 	invent.getItemOnRay = getItemOnRay

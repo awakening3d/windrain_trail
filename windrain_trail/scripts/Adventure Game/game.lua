@@ -1,5 +1,5 @@
 -- game.lua
--- v0.3
+-- v0.31
 
 require 'game_config'
 require 'inventory'
@@ -199,7 +199,7 @@ function game_OnLButtonUp(x,y)
 	end
 
 
-	if ( math.abs(downx-x)>2 or math.abs(downy-y)>2 ) then
+	if ( math.abs(downx-x)>16 or math.abs(downy-y)>16 ) then
 		return bDosomething
 	end
 
@@ -276,8 +276,13 @@ function game_FrameMove()
 
 	----------- for vr -------------
 	if (not g_config.vr) then return end
-	trackRay.setOrg( finalcamera.getPosition() + vec.new(0,25,0) )
-	trackRay.setDir( finalcamera.getFront() )
+	if g_config.vr_controller_enable then
+		trackRay.setOrg( ControllerA.getPosition() )
+		trackRay.setDir( ControllerA.getFront() )
+	else
+		trackRay.setOrg( finalcamera.getPosition() + vec.new(0,25,0) )
+		trackRay.setDir( finalcamera.getFront() )
+	end
 
 	if (lastCameraRotation-finalcamera.getRotation()).lengthsq() < 9 then
 		cameraStayTime = cameraStayTime + timed
@@ -304,7 +309,7 @@ function game_FrameMove()
 		return true
 	end
 
-	if g_inv.isShow() then
+	if g_config.vr_beam_enable and g_inv.isShow() then
 		local currentitem, t = g_inv.onRayMove( trackRay )
 		if t then
 			lastInventoryActivingTime = nowtime
@@ -332,7 +337,7 @@ function game_FrameMove()
 	end
 
 
-	if (nowtime - lastRayHotspotTime > 0.1) then
+	if g_config.vr_beam_enable and (nowtime - lastRayHotspotTime > 0.1) then
 		lastRayHotspotTime = nowtime
 		
 		----- check camera elevation angle for opening inventory window
@@ -356,7 +361,7 @@ function game_FrameMove()
 			focusHotspotDistance=nil
 		end
 
-		if cameraStayTime < 2 then
+		if not g_config.vr_controller_enable and cameraStayTime < 2 then
 			startFocusHotspotTime = nil
 		end
 
@@ -379,7 +384,11 @@ end
 
 
 function game_Render2D(draw)
+	
 	g_inv.draw(draw)
+	
+	if g_config.vr then return end
+
 	if (g_config.showCursor and cursortex) then
 		--draw.fillcircle(point.new(mx,my),8,8)
 		draw.setbkcolor(COLOR_WHITE)
@@ -431,13 +440,15 @@ function game_Render3D(draw)
 
 		if g_inv.getCoverImage() then return end
 		----- draw beam ----
-		draw.setcolor( g_config.vr_beam_color )
-		draw.setbkcolor( g_config.vr_beam_endcolor )
-		draw.gradingmode( not focusHotspotDistance )
-		local start = trackRay.getOrg()
-		draw.moveto( start  )
-		draw.lineto( start + trackRay.getDir() * (focusHotspotDistance or 500) )
-		draw.gradingmode( false )
+		if g_config.vr_beam_enable then
+			draw.setcolor( g_config.vr_beam_color )
+			draw.setbkcolor( g_config.vr_beam_endcolor )
+			draw.gradingmode( not focusHotspotDistance )
+			local start = trackRay.getOrg()
+			draw.moveto( start  )
+			draw.lineto( start + trackRay.getDir() * (focusHotspotDistance or 500) )
+			draw.gradingmode( false )
+		end
 
 		------- draw focus circle ------
 		if startFocusHotspotTime then
@@ -541,4 +552,26 @@ function getObjectOnCursor(x,y, distance)
 
 	local obj,type=t.getBlockObject()
 	return obj, t.getStop()
+end
+
+
+local _onControllerButtonPress = onControllerButtonPress
+function onControllerButtonPress( deviceID, buttonid )
+	if _onControllerButtonPress then _onControllerButtonPress( deviceID, buttonid ) end
+
+	if not g_config.vr_controller_enable then return end
+
+	if deviceID == ControllerA.getDeviceID() then
+		if buttonid == ControllerButtonID.ApplicationMenu then
+			g_inv.show( not g_inv.isShow() )
+			if g_inv.isShow() then
+				g_inv.selectItem()
+				lastInventoryActivingTime = GetAppTime()
+			end
+		elseif buttonid == ControllerButtonID.Trigger then
+			if startFocusHotspotTime then
+				startFocusHotspotTime = GetAppTime() - g_config.vr_action_time
+			end
+		end
+	end
 end

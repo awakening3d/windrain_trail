@@ -7,6 +7,7 @@ g_wincfg = {
 }
 
 g_config = {
+	vr = false, -- change 'false' to 'true' to enable VR
 	cameraPan=true,
 	cameraPanStep=512,
 	cameraPanBorderline=0.1,

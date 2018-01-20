@@ -16,17 +16,21 @@ end
 
 table.insert( g_config.scene_loaded_funs,  setupui_OnSceneLoaded )
 
-ID_YES_enter_secretroom = 9979
-ID_YES_exit_secretroom = 9980
-ID_YES_enter_dungeon = 9981
-ID_YES_exit_dungeon = 9982
-ID_YES_sleep = 9983
+ID_YES_enter_secretroom = 9978
+ID_YES_exit_secretroom = 9979
+ID_YES_enter_dungeon = 9980
+ID_YES_exit_dungeon = 9981
+ID_YES_sleep = 9982
+ID_YES_enter_stream	= 9983
 ID_YES_exit_stream	= 9984
 ID_YES_delitem		= 9985
 ID_YES_bambooraft = 9986
 ID_YES_igo	=	9987
 ID_YES_exit	=	9988
 ID_NO		=	9989
+
+ID_YES_enter_qinyunshi = 9990
+
 
 
 local ID_QUIT			= 11000
@@ -276,6 +280,10 @@ function UIevent_OnButtonDown( layer, ctrlid )
 		enter_dungeon_scene()
 	elseif (ID_YES_exit_dungeon==ctrlid) then
 		exit_dungeon_scene()
+	elseif (ID_YES_enter_qinyunshi==ctrlid) then
+		enter_qinyunshi_scene()
+	elseif (ID_YES_enter_stream==ctrlid) then
+		enter_stream_scene()
 	elseif (ID_YES_exit_stream==ctrlid) then
 		exit_stream_scene()
 	elseif (ID_YES_sleep==ctrlid) then

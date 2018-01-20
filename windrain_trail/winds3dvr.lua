@@ -518,15 +518,15 @@ function mouse_message_by_ray( ctrl, ray, winwidth, winheight )
 	local mousey = math.floor(winheight * y)
 	if lastmousex ~= mousex  or lastmousey ~= mousey then
 		lastmousex, lastmousey = mousex, mousey
-		wnd.SendMessage( GetMainWnd(), WM_MOUSEMOVE, NULL, toDWORD( mousey, mousex ) )
+		wnd.PostMessage( GetMainWnd(), WM_MOUSEMOVE, NULL, toDWORD( mousey, mousex ) )
 	end
 
 	local lbuttonpressed = ctrl.isButtonPressed( ControllerButtonID.Trigger ) 
 	if lastlbuttonpressed ~= lbuttonpressed then
 		if lbuttonpressed then
-			wnd.SendMessage( GetMainWnd(), WM_LBUTTONDOWN, NULL, toDWORD( mousey, mousex ) )
+			wnd.PostMessage( GetMainWnd(), WM_LBUTTONDOWN, NULL, toDWORD( mousey, mousex ) )
 		else
-			wnd.SendMessage( GetMainWnd(), WM_LBUTTONUP, NULL, toDWORD( mousey, mousex ) )
+			wnd.PostMessage( GetMainWnd(), WM_LBUTTONUP, NULL, toDWORD( mousey, mousex ) )
 		end
 		lastlbuttonpressed = lbuttonpressed
 	end
