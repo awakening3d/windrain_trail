@@ -4,6 +4,8 @@ if not string.find( package.path, extrapath, 1, true ) then
 end
 
 
+versiontxt.setText( versiontxt.getText() .. '0.31' )
+
 require 'winstyle'
 require 'game'
 require 'sword'
